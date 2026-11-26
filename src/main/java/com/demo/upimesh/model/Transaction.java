@@ -6,9 +6,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * Permanent record of every settled transaction. Once written, never modified.
+ * Permanent record of every settled or rejected transaction.
  * The packetHash is the idempotency key — uniqueness is enforced at the DB level
- * as a defense-in-depth fallback if the Redis-style cache layer ever fails.
+ * as a defense-in-depth fallback if the in-memory cache layer ever misses.
  */
 @Entity
 @Table(name = "transactions",
@@ -47,6 +47,15 @@ public class Transaction {
     @Column(nullable = false)
     private Status status;
 
+    @Column(nullable = true)
+    private String reason; // Nullable reason for rejected transactions (e.g. insufficient_funds)
+
+    @Column(nullable = true)
+    private Instant gatewayReceivedAt; // When Pi gateway received packet over BLE
+
+    @Column(nullable = true)
+    private String gatewaySourceDevice; // Source device identifier from gateway header
+
     public enum Status { SETTLED, REJECTED }
 
     public Transaction() {}
@@ -80,4 +89,13 @@ public class Transaction {
 
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
+    public Instant getGatewayReceivedAt() { return gatewayReceivedAt; }
+    public void setGatewayReceivedAt(Instant gatewayReceivedAt) { this.gatewayReceivedAt = gatewayReceivedAt; }
+
+    public String getGatewaySourceDevice() { return gatewaySourceDevice; }
+    public void setGatewaySourceDevice(String gatewaySourceDevice) { this.gatewaySourceDevice = gatewaySourceDevice; }
 }

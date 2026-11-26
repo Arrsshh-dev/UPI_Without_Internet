@@ -13,13 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.UUID;
 
 /**
  * Helper service that:
- *   - seeds demo accounts on startup
+ *   - seeds demo accounts with initial balances and PIN hashes
  *   - simulates "sender phone creates an encrypted packet" flow
  */
 @Service
@@ -34,11 +35,16 @@ public class DemoService {
     @PostConstruct
     public void seedAccounts() {
         if (accounts.count() == 0) {
-            accounts.save(new Account("alice@demo", "Alice",   new BigDecimal("5000.00")));
-            accounts.save(new Account("bob@demo",   "Bob",     new BigDecimal("1000.00")));
-            accounts.save(new Account("carol@demo", "Carol",   new BigDecimal("2500.00")));
-            accounts.save(new Account("dave@demo",  "Dave",    new BigDecimal("500.00")));
-            log.info("Seeded 4 demo accounts");
+            try {
+                String defaultPinHash = sha256Hex("1234");
+                accounts.save(new Account("alice@demo", "Alice", new BigDecimal("5000.00"), defaultPinHash));
+                accounts.save(new Account("bob@demo",   "Bob",   new BigDecimal("1000.00"), defaultPinHash));
+                accounts.save(new Account("carol@demo", "Carol", new BigDecimal("2500.00"), defaultPinHash));
+                accounts.save(new Account("dave@demo",  "Dave",  new BigDecimal("500.00"),  defaultPinHash));
+                log.info("Seeded 4 demo accounts with default PIN 1234");
+            } catch (Exception e) {
+                log.error("Failed to seed demo accounts: {}", e.getMessage(), e);
+            }
         }
     }
 
@@ -47,10 +53,6 @@ public class DemoService {
      *   1. Build a PaymentInstruction with a fresh nonce + signedAt timestamp.
      *   2. Encrypt with the server's public key (hybrid RSA+AES).
      *   3. Wrap in a MeshPacket with TTL.
-     *
-     * In a real Android app, this exact code (minus the server-side reference)
-     * would run on the phone. The phone would have already cached the server's
-     * public key during a previous online session.
      */
     public MeshPacket createPacket(String senderVpa, String receiverVpa,
                                    BigDecimal amount, String pin, int ttl) throws Exception {
@@ -73,9 +75,9 @@ public class DemoService {
         return packet;
     }
 
-    private String sha256Hex(String input) throws Exception {
+    public String sha256Hex(String input) throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(input.getBytes());
+        byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
         StringBuilder hex = new StringBuilder();
         for (byte b : hash) hex.append(String.format("%02x", b));
         return hex.toString();

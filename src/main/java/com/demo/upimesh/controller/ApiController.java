@@ -178,9 +178,11 @@ public class ApiController {
     public ResponseEntity<?> ingest(
             @RequestBody MeshPacket packet,
             @RequestHeader(value = "X-Bridge-Node-Id", defaultValue = "unknown") String bridgeNodeId,
-            @RequestHeader(value = "X-Hop-Count", defaultValue = "0") int hopCount) {
+            @RequestHeader(value = "X-Hop-Count", defaultValue = "0") int hopCount,
+            @RequestHeader(value = "X-Received-At", required = false) Long receivedAt,
+            @RequestHeader(value = "X-Source-Device", required = false) String sourceDevice) {
 
-        BridgeIngestionService.IngestResult r = bridge.ingest(packet, bridgeNodeId, hopCount);
+        BridgeIngestionService.IngestResult r = bridge.ingest(packet, bridgeNodeId, hopCount, receivedAt, sourceDevice);
         return ResponseEntity.ok(r);
     }
 
@@ -194,5 +196,12 @@ public class ApiController {
     @GetMapping("/transactions")
     public List<Transaction> listTransactions() {
         return txRepo.findTop20ByOrderByIdDesc();
+    }
+
+    @GetMapping("/transactions/by-hash/{packetHash}")
+    public ResponseEntity<Transaction> getTransactionByHash(@PathVariable String packetHash) {
+        return txRepo.findByPacketHash(packetHash)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
