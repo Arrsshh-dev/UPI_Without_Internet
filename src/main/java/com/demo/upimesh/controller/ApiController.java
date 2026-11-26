@@ -31,6 +31,9 @@ public class ApiController {
     @Autowired private TransactionRepository txRepo;
     @Autowired private IdempotencyService idempotency;
 
+    @org.springframework.beans.factory.annotation.Value("${upi.demo.enabled:true}")
+    private boolean demoEnabled;
+
     // ------------------------------------------------------------------ key
 
     @GetMapping("/server-key")
@@ -63,6 +66,25 @@ public class ApiController {
                 "ttl", packet.getTtl(),
                 "injectedAt", startDevice
         ));
+    }
+
+    /**
+     * Demo helper: build an encrypted packet without injecting it into the mesh simulator.
+     * Returns the exact MeshPacket JSON.
+     */
+    @PostMapping("/demo/packet")
+    public ResponseEntity<?> demoCreatePacket(@RequestBody(required = false) DemoSendRequest req) throws Exception {
+        if (!demoEnabled) {
+            return ResponseEntity.status(403).body(Map.of("error", "demo packet creation disabled"));
+        }
+        String sender = (req != null && req.senderVpa != null) ? req.senderVpa : "alice@demo";
+        String receiver = (req != null && req.receiverVpa != null) ? req.receiverVpa : "bob@demo";
+        BigDecimal amount = (req != null && req.amount != null) ? req.amount : new BigDecimal("500.00");
+        String pin = (req != null && req.pin != null) ? req.pin : "1234";
+        int ttl = (req != null && req.ttl != null) ? req.ttl : 5;
+
+        MeshPacket packet = demo.createPacket(sender, receiver, amount, pin, ttl);
+        return ResponseEntity.ok(packet);
     }
 
     public static class DemoSendRequest {
