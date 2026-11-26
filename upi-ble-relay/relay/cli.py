@@ -102,6 +102,27 @@ def cmd_reset(args):
         print(f"Deleted {count} packet(s).")
 
 
+def cmd_serve(args):
+    """Run BLE GATT server and background sync worker together."""
+    import logging
+    import threading
+    from .sync_worker import sync_loop
+    from .gatt_server import start_gatt_server
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+    def _run_sync():
+        with PacketStore(args.db) as sync_store:
+            sync_loop(sync_store, backend_url=args.backend_url)
+
+    threading.Thread(target=_run_sync, daemon=True).start()
+    with PacketStore(args.db) as ble_store:
+        start_gatt_server(ble_store)
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="upi-relay",
@@ -130,6 +151,9 @@ def main():
 
     p_reset = sub.add_parser("reset", help="Delete all packets")
     p_reset.set_defaults(func=cmd_reset)
+
+    p_serve = sub.add_parser("serve", help="Run BLE GATT server + background sync worker")
+    p_serve.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
     args.func(args)

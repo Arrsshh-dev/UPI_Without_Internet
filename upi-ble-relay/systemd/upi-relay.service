@@ -6,24 +6,22 @@ Wants=bluetooth.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/upi-ble-relay
-ExecStart=/home/pi/upi-ble-relay/venv/bin/python -m relay.cli --db /home/pi/upi-ble-relay/packets.db sync-now
-# For the full GATT + sync server, use:
-# ExecStart=/home/pi/upi-ble-relay/venv/bin/python -m relay.gatt_server
+User=root
+WorkingDirectory=/home/pi/UPI_Without_Internet/upi-ble-relay
+ExecStart=/home/pi/UPI_Without_Internet/upi-ble-relay/venv/bin/python -m relay.cli --db /home/pi/UPI_Without_Internet/upi-ble-relay/packets.db serve
 Restart=always
 RestartSec=5
 
 # Environment
-Environment=UPI_BACKEND_URL=http://192.168.1.100:8080
+Environment=UPI_BACKEND_URL=http://192.168.137.1:8080
 Environment=UPI_BRIDGE_NODE_ID=pi-gateway-01
-Environment=UPI_DB_PATH=/home/pi/upi-ble-relay/packets.db
+Environment=UPI_DB_PATH=/home/pi/UPI_Without_Internet/upi-ble-relay/packets.db
 Environment=PYTHONUNBUFFERED=1
 
 # Security hardening
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/home/pi/upi-ble-relay
+ReadWritePaths=/home/pi/UPI_Without_Internet/upi-ble-relay
 
 [Install]
 WantedBy=multi-user.target
