@@ -19,3 +19,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Frontend build & dependencies
+web-sender/node_modules/
+web-sender/dist/
+
