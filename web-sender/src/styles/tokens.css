@@ -1,0 +1,53 @@
+:root {
+  /* Colors */
+  --color-primary: #18181b;
+  --color-on-primary: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-container: #f4f4f5;
+  --color-on-surface: #18181b;
+  --color-on-surface-muted: #71717a;
+  --color-outline: #e4e4e7;
+
+  /* Status colors — ONLY for status chips */
+  --color-status-settled: #15803d;
+  --color-status-rejected: #b91c1c;
+  --color-status-pending: #a16207;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-display-lg: 32px;
+  --lh-display-lg: 38px;
+  --text-headline-lg: 22px;
+  --lh-headline-lg: 28px;
+  --text-title-md: 16px;
+  --lh-title-md: 22px;
+  --text-label-lg: 15px;
+  --lh-label-lg: 20px;
+  --text-body-md: 14px;
+  --lh-body-md: 20px;
+  --text-body-sm: 13px;
+  --lh-body-sm: 18px;
+  --text-label-sm: 12px;
+  --lh-label-sm: 16px;
+  --text-mono-sm: 12px;
+  --lh-mono-sm: 16px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Radii (max 6px) */
+  --radius-sm: 2px;
+  --radius-default: 4px;
+  --radius-md: 6px;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --dur-state: 100ms;
+  --dur-sheet: 200ms;
+}
