@@ -21,7 +21,7 @@ from . import config
 
 def cmd_simulate_write(args):
     """Feed a MeshPacket JSON file through chunking → reassembly → store."""
-    with open(args.file, "r", encoding="utf-8") as f:
+    with open(args.file, "r", encoding="utf-8-sig") as f:
         packet_json = f.read().strip()
 
     # Validate it's JSON
