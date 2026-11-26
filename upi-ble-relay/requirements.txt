@@ -1,0 +1,8 @@
+# Core (pure logic, runs on any platform)
+requests>=2.28
+
+# BLE GATT server (Raspberry Pi only — not needed for tests or CLI)
+# bluezero>=0.8.0
+
+# Testing
+pytest>=7.0

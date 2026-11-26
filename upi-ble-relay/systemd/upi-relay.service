@@ -1,0 +1,29 @@
+[Unit]
+Description=UPI BLE Relay Gateway
+Documentation=https://github.com/perryvegehan/UPI_Without_Internet
+After=bluetooth.target network-online.target
+Wants=bluetooth.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/upi-ble-relay
+ExecStart=/home/pi/upi-ble-relay/venv/bin/python -m relay.cli --db /home/pi/upi-ble-relay/packets.db sync-now
+# For the full GATT + sync server, use:
+# ExecStart=/home/pi/upi-ble-relay/venv/bin/python -m relay.gatt_server
+Restart=always
+RestartSec=5
+
+# Environment
+Environment=UPI_BACKEND_URL=http://192.168.1.100:8080
+Environment=UPI_BRIDGE_NODE_ID=pi-gateway-01
+Environment=UPI_DB_PATH=/home/pi/upi-ble-relay/packets.db
+Environment=PYTHONUNBUFFERED=1
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/pi/upi-ble-relay
+
+[Install]
+WantedBy=multi-user.target
