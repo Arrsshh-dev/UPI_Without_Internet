@@ -400,6 +400,18 @@ For a college / portfolio project: name the concept honestly as **"mesh-routed d
 
 ---
 
+## BLE Gateway Extension (Offline Pay)
+
+Extended from the base mesh simulator with **offline payment instruction transfer with deferred simulated settlement**:
+
+- **Persistent backend (`src/main/java/...`)**: Persistent RSA-2048 keypair (`keys/`), H2 file-mode ledger (`data/`), restart-safe DB deduplication, `REJECTED` outcome mapping, PIN hash check (demo stand-in for sender device signatures), ₹500 offline spending cap, gateway receipt metadata (`X-Received-At`, `X-Source-Device`), `POST /api/demo/packet`, `GET /api/transactions/by-hash/{hash}`, `/app/` web UI, and `/bob` receiver view.
+- **Raspberry Pi BLE Gateway (`upi-ble-relay/`)**: Python 3 BlueZ GATT server (`UPI-Gateway-01`), 140-char chunked frame reassembly, SQLite WAL durable queue, background sync worker with exponential backoff, and `systemd` service.
+- **Offline Pay Web Client (`web-sender/`)**: React 18 + Vite app with WebCrypto hybrid encryption (`src/lib/packet.js`), chunker (`src/lib/chunker.js`), Web Bluetooth sender (`src/lib/ble.js`), `localStorage` outbox, and nRF Connect chunk-copy fallback.
+
+> **Honest scope:** A Bluetooth gateway acknowledgement means *"received by the gateway"*, never *"paid"*. This is a prototype for offline payment instruction transfer with deferred simulated settlement — not connected to NPCI or any bank, and it does not prevent offline double-spending.
+
+---
+
 ## License
 
 Demo code, no license. Use it however you want for learning.

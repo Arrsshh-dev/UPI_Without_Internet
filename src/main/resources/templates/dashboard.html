@@ -141,7 +141,8 @@
         <table id="tx-table">
             <thead><tr>
                 <th>ID</th><th>From</th><th>To</th><th>Amount</th>
-                <th>Status</th><th>Bridge</th><th>Hops</th><th>Settled</th>
+                <th>Status</th><th>Reason</th><th>Bridge / Source</th>
+                <th>Gateway Rx</th><th>Settled</th><th>Timeline</th>
             </tr></thead>
             <tbody></tbody>
         </table>
@@ -185,15 +186,28 @@ async function refresh() {
 
     // Transactions
     const txs = await fetch('/api/transactions').then(r => r.json());
-    document.querySelector('#tx-table tbody').innerHTML = txs.map(t => `
+    const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', {hour12: false}) : '—';
+    document.querySelector('#tx-table tbody').innerHTML = txs.map(t => {
+        const gwRx = fmt(t.gatewayReceivedAt);
+        const settled = fmt(t.settledAt);
+        const timeline = t.gatewayReceivedAt
+            ? `Received by gateway ${gwRx} → Settled ${settled}`
+            : `Settled ${settled}`;
+        const source = t.gatewaySourceDevice
+            ? `${t.bridgeNodeId} (${t.gatewaySourceDevice})`
+            : `${t.bridgeNodeId} (hops: ${t.hopCount})`;
+        return `
         <tr>
             <td>${t.id}</td><td>${t.senderVpa}</td><td>${t.receiverVpa}</td>
             <td class="balance">₹${parseFloat(t.amount).toFixed(2)}</td>
             <td class="status-${t.status}">${t.status}</td>
-            <td>${t.bridgeNodeId}</td><td>${t.hopCount}</td>
-            <td class="small">${new Date(t.settledAt).toLocaleTimeString()}</td>
-        </tr>
-    `).join('');
+            <td class="small">${t.reason || '—'}</td>
+            <td class="small">${source}</td>
+            <td class="small">${gwRx}</td>
+            <td class="small">${settled}</td>
+            <td class="small">${timeline}</td>
+        </tr>`;
+    }).join('');
 }
 
 async function sendPacket() {
