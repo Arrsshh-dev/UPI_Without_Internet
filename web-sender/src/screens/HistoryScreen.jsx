@@ -23,10 +23,14 @@ export function HistoryScreen() {
   const { outbox, mergeSettlementStatus } = useTransfer();
   const [selected, setSelected] = useState(null);
 
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  // Only disable polling if an HTTPS page tries to contact an insecure HTTP backend
+  const isMixedContent =
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    API_BASE.startsWith('http:');
 
   useEffect(() => {
-    if (isHttps) return undefined;
+    if (isMixedContent) return undefined;
 
     const pending = outbox.filter(
       (item) => item.status === 'PENDING_SETTLEMENT' && item.packetHash
@@ -67,8 +71,8 @@ export function HistoryScreen() {
       <main className="main-content main-content--compact">
         <div className="page-heading">
           <h2>History</h2>
-          {isHttps && outbox.length > 0 && (
-            <p>Settlement polling is disabled on HTTPS. Open from the local backend to refresh.</p>
+          {isMixedContent && outbox.length > 0 && (
+            <p>Settlement polling is disabled when accessing HTTP backend from HTTPS.</p>
           )}
         </div>
 

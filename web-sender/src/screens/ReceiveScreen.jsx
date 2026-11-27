@@ -9,14 +9,18 @@ export function ReceiveScreen() {
   const [searchParams] = useSearchParams();
   const vpa = searchParams.get('vpa') || 'bob@demo';
 
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  // Only block if an HTTPS frontend is attempting to call an insecure HTTP backend
+  const isMixedContent =
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    API_BASE.startsWith('http:');
 
   const [balance, setBalance] = useState(null);
   const [incoming, setIncoming] = useState([]);
   const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
-    if (isHttps) return undefined;
+    if (isMixedContent) return undefined;
 
     let cancelled = false;
     async function load() {
@@ -63,12 +67,12 @@ export function ReceiveScreen() {
       </header>
 
       <main className="main-content">
-        {isHttps ? (
+        {isMixedContent ? (
           <section className="card">
-            <h2 className="topbar-title">Receiver view unavailable on HTTPS</h2>
+            <h2 className="topbar-title">Receiver view unavailable on mixed content</h2>
             <p style={{ margin: 0 }}>
-              This page is served over HTTPS (for Web Bluetooth), so the browser blocks HTTP calls
-              to the local backend. Open the Receive view from the Spring Boot backend URL instead.
+              This page is served over HTTPS, so the browser blocks HTTP calls
+              to an insecure HTTP backend. Open the Receive view from the backend URL instead.
             </p>
             <p className="muted-note">Settlement shown here is simulated.</p>
           </section>
