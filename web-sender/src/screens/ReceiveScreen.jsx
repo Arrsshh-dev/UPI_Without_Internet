@@ -57,7 +57,7 @@ export function ReceiveScreen() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [isHttps, vpa]);
+  }, [isMixedContent, vpa]);
 
   return (
     <>

@@ -59,7 +59,7 @@ export function HistoryScreen() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [isHttps, outbox.length]);
+  }, [isMixedContent, outbox.length]);
 
   return (
     <>
