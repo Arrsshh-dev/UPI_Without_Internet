@@ -13,6 +13,7 @@ export function TransferScreen() {
   const [copiedLabel, setCopiedLabel] = useState('');
 
   const bleSupported = isWebBluetoothSupported();
+  const frames = state.packetJson ? chunkString(state.packetJson) : [];
 
   async function copyText(text, label) {
     try {
@@ -30,9 +31,8 @@ export function TransferScreen() {
   }
 
   function handleCopyChunks() {
-    if (!state.packetJson) return;
-    const frames = chunkString(state.packetJson).join('\n');
-    copyText(frames, 'chunks');
+    if (frames.length === 0) return;
+    copyText(frames.join('\n'), 'chunks');
   }
 
   if (state.phase === 'IDLE' || !state.packet) {
@@ -145,11 +145,40 @@ export function TransferScreen() {
         {!bleSupported && !isStored && (
           <section className="card">
             <p style={{ margin: 0 }}>
-              Web Bluetooth is not supported in this browser. Copy the BLE chunks below to write
-              them manually in nRF Connect, or copy the packet JSON.
+              Web Bluetooth is not supported in this browser. Copy and send each chunk below one by
+              one in nRF Connect (UTF-8 Text mode).
             </p>
-            <button type="button" onClick={handleCopyChunks} className="btn-primary">
-              {copiedLabel === 'chunks' ? 'Copied BLE chunks' : 'Copy chunks'}
+            {frames.length > 0 && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: '8px',
+                }}
+              >
+                {frames.map((frame, idx) => {
+                  const tag = `chunk-${idx}`;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => copyText(frame, tag)}
+                      className="btn-compact"
+                      style={{
+                        minHeight: '44px',
+                        color: copiedLabel === tag ? 'var(--color-on-primary)' : 'var(--color-on-surface)',
+                        backgroundColor:
+                          copiedLabel === tag ? 'var(--color-primary)' : 'var(--color-surface)',
+                      }}
+                    >
+                      {copiedLabel === tag ? `Copied ${idx + 1}/${frames.length}` : `Copy ${idx + 1}/${frames.length}`}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <button type="button" onClick={handleCopyChunks} className="btn-secondary">
+              {copiedLabel === 'chunks' ? 'Copied all chunks' : 'Copy all chunks'}
             </button>
             <button type="button" onClick={handleCopyPacket} className="btn-secondary">
               {copiedLabel === 'packet' ? 'Copied packet JSON' : 'Copy packet JSON'}
@@ -184,18 +213,16 @@ export function TransferScreen() {
           </section>
         )}
 
-        {/* Error State Banner */}
-        {isError && (
+        {/* Error State Banner (only when Web Bluetooth is supported) */}
+        {bleSupported && isError && (
           <section className="card">
             <p style={{ margin: 0 }}>
               {state.errorReason || 'Connection lost. Move closer to the gateway and retry.'}
             </p>
             <div className="form-stack" style={{ gap: '8px' }}>
-              {bleSupported && (
-                <button type="button" onClick={() => startBleTransfer()} className="btn-primary">
-                  Retry
-                </button>
-              )}
+              <button type="button" onClick={() => startBleTransfer()} className="btn-primary">
+                Retry
+              </button>
               <button type="button" onClick={handleCopyChunks} className="btn-secondary">
                 {copiedLabel === 'chunks' ? 'Copied BLE chunks' : 'Copy chunks'}
               </button>
