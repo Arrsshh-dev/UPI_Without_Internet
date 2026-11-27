@@ -42,6 +42,12 @@ public class ServerKeyHolder {
     @Value("${upi.server.key-dir:./keys}")
     private String keyDir;
 
+    @Value("${upi.server.private-key:}")
+    private String envPrivateKey;
+
+    @Value("${upi.server.public-key:}")
+    private String envPublicKey;
+
     private KeyPair keyPair;
 
     public ServerKeyHolder() {}
@@ -49,6 +55,8 @@ public class ServerKeyHolder {
     /** Constructor for direct instantiation in tests */
     public ServerKeyHolder(String keyDir) {
         this.keyDir = keyDir;
+        this.envPrivateKey = "";
+        this.envPublicKey = "";
     }
 
     @PostConstruct
@@ -57,6 +65,14 @@ public class ServerKeyHolder {
     }
 
     public synchronized void loadOrGenerateKey() throws Exception {
+        if (envPrivateKey != null && !envPrivateKey.isBlank()
+                && envPublicKey != null && !envPublicKey.isBlank()) {
+            this.keyPair = decodeKeyPair(envPrivateKey.trim(), envPublicKey.trim());
+            log.info("Loaded Server RSA keypair from environment. Public key fingerprint: {}",
+                    getPublicKeyBase64().substring(0, Math.min(32, getPublicKeyBase64().length())) + "...");
+            return;
+        }
+
         Path dirPath = Paths.get(keyDir);
         Path privatePath = dirPath.resolve(PRIVATE_KEY_FILE);
         Path publicPath = dirPath.resolve(PUBLIC_KEY_FILE);
@@ -93,7 +109,10 @@ public class ServerKeyHolder {
     private KeyPair loadKeyPair(Path privatePath, Path publicPath) throws Exception {
         String privateKeyB64 = Files.readString(privatePath, StandardCharsets.UTF_8).trim();
         String publicKeyB64 = Files.readString(publicPath, StandardCharsets.UTF_8).trim();
+        return decodeKeyPair(privateKeyB64, publicKeyB64);
+    }
 
+    private KeyPair decodeKeyPair(String privateKeyB64, String publicKeyB64) throws Exception {
         byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyB64);
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyB64);
 
