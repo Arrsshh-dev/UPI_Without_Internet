@@ -2,154 +2,354 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>UPI Offline Mesh — Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI Offline Mesh — Operator Dashboard</title>
     <style>
+        :root {
+            --color-primary: #18181B;
+            --color-on-primary: #FFFFFF;
+            --color-surface: #FFFFFF;
+            --color-surface-container: #F4F4F5;
+            --color-on-surface: #18181B;
+            --color-on-surface-muted: #71717A;
+            --color-outline: #E4E4E7;
+            --color-status-settled: #15803D;
+            --color-status-rejected: #B91C1C;
+            --color-status-pending: #A16207;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
         * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            margin: 0; padding: 24px; background: #0d1117; color: #e6edf3;
+            font-family: var(--font-sans);
+            margin: 0;
+            background: var(--color-surface);
+            color: var(--color-on-surface);
+            font-size: 14px;
+            line-height: 20px;
+            -webkit-font-smoothing: antialiased;
         }
-        h1 { margin-top: 0; color: #f0f6fc; }
-        h2 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 4px; margin-top: 32px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-outline);
+        }
+        .topbar-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .topbar h1 {
+            margin: 0;
+            font-size: 16px;
+            line-height: 22px;
+            font-weight: 600;
+            color: var(--color-on-surface);
+        }
+        .topbar-subtitle {
+            margin: 2px 0 0;
+            font-size: 12px;
+            line-height: 16px;
+            color: var(--color-on-surface-muted);
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 6px 12px;
+            border: 1px solid var(--color-outline);
+            border-radius: 6px;
+            background: var(--color-surface);
+            color: var(--color-on-surface);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .nav-link:hover { background: var(--color-surface-container); }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 24px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
         .grid { display: grid; gap: 16px; }
-        .grid-2 { grid-template-columns: 1fr 1fr; }
-        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        @media (max-width: 820px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
         .card {
-            background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 6px;
+            padding: 16px;
+        }
+        .card h2, .card h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            line-height: 22px;
+            font-weight: 600;
+            color: var(--color-on-surface);
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--color-outline);
+        }
+        .controls {
+            background: var(--color-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 6px;
+            padding: 16px;
+        }
+        .controls h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            line-height: 22px;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--color-outline);
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-outline);
+        }
+        .flow-row:last-child { border-bottom: 0; padding-bottom: 0; }
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            background: var(--color-primary);
+            color: var(--color-on-primary);
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
         }
         .device {
-            border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 8px;
-            background: #0d1117;
+            border: 1px solid var(--color-outline);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--color-surface);
         }
-        .device.bridge { border-color: #2ea043; background: #052e16; }
-        .device.offline { opacity: 0.85; }
+        .device:last-child { margin-bottom: 0; }
+        .device.bridge { background: var(--color-surface-container); }
         .badge {
-            display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
-            font-weight: 600; margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            line-height: 16px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--color-outline);
+            background: var(--color-surface);
+            color: var(--color-on-surface);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-left: 6px;
         }
-        .badge-online { background: #2ea043; color: white; }
-        .badge-offline { background: #6e7681; color: white; }
+        .badge-online { color: var(--color-status-settled); }
+        .badge-offline { color: var(--color-on-surface-muted); }
         .packet-id {
-            font-family: 'Consolas', 'Monaco', monospace; font-size: 11px;
-            background: #21262d; padding: 2px 6px; border-radius: 3px; margin: 2px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            background: var(--color-surface-container);
+            border: 1px solid var(--color-outline);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 4px 4px 0 0;
             display: inline-block;
         }
         button {
-            background: #238636; color: white; border: none; padding: 8px 16px;
-            border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;
-            margin: 4px;
+            min-height: 38px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--color-primary);
+            background: var(--color-primary);
+            color: var(--color-on-primary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 500;
         }
-        button:hover { background: #2ea043; }
-        button.danger { background: #da3633; }
-        button.danger:hover { background: #f85149; }
-        button.secondary { background: #1f6feb; }
-        button.secondary:hover { background: #388bfd; }
+        button:hover { opacity: 0.9; }
+        button.secondary, button.danger {
+            background: var(--color-surface);
+            color: var(--color-on-surface);
+            border: 1px solid var(--color-outline);
+        }
+        button.secondary:hover, button.danger:hover {
+            background: var(--color-surface-container);
+        }
         input, select {
-            background: #0d1117; color: #e6edf3; border: 1px solid #30363d;
-            border-radius: 4px; padding: 6px 10px; font-size: 14px; margin: 4px;
+            min-height: 38px;
+            background: var(--color-surface);
+            color: var(--color-on-surface);
+            border: 1px solid var(--color-outline);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: var(--font-sans);
+            font-size: 13px;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #30363d; }
-        th { color: #8b949e; font-weight: 600; font-size: 12px; text-transform: uppercase; }
-        .status-SETTLED { color: #56d364; font-weight: 600; }
-        .status-REJECTED { color: #f85149; font-weight: 600; }
-        .status-DUPLICATE_DROPPED { color: #d29922; font-weight: 600; }
-        .status-INVALID { color: #f85149; font-weight: 600; }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--color-outline);
+            vertical-align: middle;
+        }
+        th {
+            color: var(--color-on-surface-muted);
+            font-weight: 500;
+            font-size: 12px;
+        }
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--color-outline);
+            background: var(--color-surface);
+            font-size: 11px;
+            line-height: 16px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .status-SETTLED { color: var(--color-status-settled); }
+        .status-REJECTED, .status-INVALID { color: var(--color-status-rejected); }
+        .status-DUPLICATE_DROPPED { color: var(--color-status-pending); }
+        .balance {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: var(--color-on-surface);
+        }
+        .tabular { font-variant-numeric: tabular-nums; }
+        .small { font-size: 12px; color: var(--color-on-surface-muted); }
         #log {
-            background: #010409; color: #7ee787; padding: 12px; border-radius: 6px;
-            font-family: 'Consolas', 'Monaco', monospace; font-size: 12px;
-            max-height: 220px; overflow-y: auto; white-space: pre-wrap;
-            border: 1px solid #30363d;
+            background: var(--color-surface-container);
+            color: var(--color-on-surface);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 18px;
+            max-height: 220px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid var(--color-outline);
         }
-        .controls { background: #161b22; padding: 16px; border-radius: 8px;
-                    border: 1px solid #30363d; margin-bottom: 16px; }
-        .step-num {
-            display: inline-block; background: #58a6ff; color: white;
-            border-radius: 50%; width: 24px; height: 24px; text-align: center;
-            line-height: 24px; font-weight: 600; margin-right: 8px;
-        }
-        .balance { font-family: 'Consolas', monospace; color: #56d364; font-weight: 600; }
-        .small { font-size: 12px; color: #8b949e; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📡 UPI Offline Mesh — Live Demo</h1>
-    <p class="small">
-        Send money in a basement with zero internet. Encrypted packets gossip from phone to phone
-        until one with 4G reaches the backend.
-    </p>
-
-    <div class="controls">
-        <h3 style="margin-top:0">🎬 Demo Flow</h3>
-
+<header class="topbar">
+    <div class="topbar-inner">
         <div>
-            <span class="step-num">1</span><strong>Compose payment</strong> (simulates sender phone)
-            <br>
+            <h1>Offline Pay — Operator Dashboard</h1>
+            <p class="topbar-subtitle">Offline payment instruction transfer with deferred simulated settlement</p>
+        </div>
+        <nav class="nav-links" aria-label="Views">
+            <a class="nav-link" href="/app/">Sender app</a>
+            <a class="nav-link" href="/bob">Receiver view (Bob)</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+    <div class="controls">
+        <h3>Mesh Simulator</h3>
+
+        <div class="flow-row">
+            <span class="step-num">1</span><strong>Compose instruction</strong>
             <select id="senderVpa">
                 <option>alice@demo</option>
                 <option>bob@demo</option>
                 <option>carol@demo</option>
             </select>
-            →
+            <span class="small">to</span>
             <select id="receiverVpa">
                 <option>bob@demo</option>
                 <option>carol@demo</option>
                 <option>alice@demo</option>
                 <option>dave@demo</option>
             </select>
-            ₹<input type="number" id="amount" value="500" style="width: 100px">
-            PIN <input type="text" id="pin" value="1234" style="width: 80px" maxlength="4">
-            <button onclick="sendPacket()">📤 Inject into Mesh</button>
+            <span>₹</span><input type="number" id="amount" value="500" style="width: 96px">
+            <span class="small">PIN</span><input type="text" id="pin" value="1234" style="width: 72px" maxlength="4">
+            <button onclick="sendPacket()">Inject into mesh</button>
         </div>
 
-        <div style="margin-top: 16px">
-            <span class="step-num">2</span><strong>Gossip</strong> — packets hop device-to-device
-            <button class="secondary" onclick="gossip()">🔄 Run Gossip Round</button>
+        <div class="flow-row">
+            <span class="step-num">2</span><strong>Gossip</strong>
+            <span class="small">Packets hop device-to-device</span>
+            <button class="secondary" onclick="gossip()">Run gossip round</button>
         </div>
 
-        <div style="margin-top: 16px">
-            <span class="step-num">3</span><strong>Bridge node walks outside, hits 4G</strong>
-            <button class="secondary" onclick="flushBridges()">📡 Bridges Upload to Backend</button>
-            <span class="small">(parallel — exercises idempotency)</span>
-        </div>
-
-        <div style="margin-top: 16px">
-            <button class="danger" onclick="resetMesh()">🗑 Reset Mesh + Cache</button>
+        <div class="flow-row">
+            <span class="step-num">3</span><strong>Bridge upload</strong>
+            <span class="small">Bridge nodes upload concurrently</span>
+            <button class="secondary" onclick="flushBridges()">Upload to backend</button>
+            <button class="danger" onclick="resetMesh()">Reset mesh + cache</button>
         </div>
     </div>
 
     <div class="grid grid-2">
         <div class="card">
-            <h2>📱 Mesh Devices</h2>
+            <h2>Mesh devices</h2>
             <div id="devices"></div>
         </div>
 
         <div class="card">
-            <h2>🏦 Account Balances</h2>
-            <table id="accounts-table">
-                <thead><tr><th>VPA</th><th>Holder</th><th>Balance</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <p class="small" id="cacheInfo"></p>
+            <h2>Account balances</h2>
+            <div class="table-wrap">
+                <table id="accounts-table">
+                    <thead><tr><th>VPA</th><th>Holder</th><th>Balance</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="small" id="cacheInfo" style="margin: 10px 0 0;"></p>
         </div>
     </div>
 
-    <div class="card" style="margin-top: 16px">
-        <h2>📜 Transaction Ledger</h2>
-        <table id="tx-table">
-            <thead><tr>
-                <th>ID</th><th>From</th><th>To</th><th>Amount</th>
-                <th>Status</th><th>Reason</th><th>Bridge / Source</th>
-                <th>Gateway Rx</th><th>Settled</th><th>Timeline</th>
-            </tr></thead>
-            <tbody></tbody>
-        </table>
+    <div class="card">
+        <h2>Transaction ledger</h2>
+        <div class="table-wrap">
+            <table id="tx-table">
+                <thead><tr>
+                    <th>ID</th><th>From</th><th>To</th><th>Amount</th>
+                    <th>Status</th><th>Reason</th><th>Bridge / Source</th>
+                    <th>Gateway Rx</th><th>Settled</th><th>Timeline</th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card" style="margin-top: 16px">
-        <h2>🪵 Activity Log</h2>
+    <div class="card">
+        <h2>Activity log</h2>
         <div id="log"></div>
     </div>
 </div>
@@ -157,7 +357,7 @@
 <script>
 function log(msg) {
     const el = document.getElementById('log');
-    el.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n' + el.textContent;
+    el.textContent = '[' + new Date().toLocaleTimeString('en-GB', {hour12: false}) + '] ' + msg + '\n' + el.textContent;
 }
 
 async function refresh() {
@@ -168,9 +368,9 @@ async function refresh() {
         <div class="device ${d.hasInternet ? 'bridge' : 'offline'}">
             <strong>${d.deviceId}</strong>
             <span class="badge ${d.hasInternet ? 'badge-online' : 'badge-offline'}">
-                ${d.hasInternet ? '🌐 4G' : '🚫 OFFLINE'}
+                ${d.hasInternet ? 'ONLINE' : 'OFFLINE'}
             </span>
-            <span class="small">holding ${d.packetCount} packet(s)</span>
+            <span class="small" style="margin-left: 6px;">holding ${d.packetCount} packet(s)</span>
             <div>${d.packetIds.map(id => `<span class="packet-id">${id}</span>`).join('')}</div>
         </div>
     `).join('');
@@ -181,7 +381,7 @@ async function refresh() {
     const accs = await fetch('/api/accounts').then(r => r.json());
     document.querySelector('#accounts-table tbody').innerHTML = accs.map(a => `
         <tr><td>${a.vpa}</td><td>${a.holderName}</td>
-            <td class="balance">₹${parseFloat(a.balance).toFixed(2)}</td></tr>
+            <td class="balance">₹${parseFloat(a.balance).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>
     `).join('');
 
     // Transactions
@@ -198,14 +398,14 @@ async function refresh() {
             : `${t.bridgeNodeId} (hops: ${t.hopCount})`;
         return `
         <tr>
-            <td>${t.id}</td><td>${t.senderVpa}</td><td>${t.receiverVpa}</td>
-            <td class="balance">₹${parseFloat(t.amount).toFixed(2)}</td>
-            <td class="status-${t.status}">${t.status}</td>
+            <td class="tabular">${t.id}</td><td>${t.senderVpa}</td><td>${t.receiverVpa}</td>
+            <td class="balance">₹${parseFloat(t.amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td><span class="status-chip status-${t.status}">${t.status}</span></td>
             <td class="small">${t.reason || '—'}</td>
             <td class="small">${source}</td>
-            <td class="small">${gwRx}</td>
-            <td class="small">${settled}</td>
-            <td class="small">${timeline}</td>
+            <td class="small tabular">${gwRx}</td>
+            <td class="small tabular">${settled}</td>
+            <td class="small tabular">${timeline}</td>
         </tr>`;
     }).join('');
 }
@@ -223,22 +423,22 @@ async function sendPacket() {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)
     }).then(r => r.json());
-    log(`📤 Packet ${r.packetId.substring(0,8)} encrypted & injected at ${r.injectedAt} (TTL ${r.ttl})`);
-    log(`   ciphertext (truncated): ${r.ciphertextPreview}`);
+    log(`Packet ${r.packetId.substring(0,8)} encrypted & injected at ${r.injectedAt} (TTL ${r.ttl})`);
+    log(`  ciphertext (truncated): ${r.ciphertextPreview}`);
     refresh();
 }
 
 async function gossip() {
     const r = await fetch('/api/mesh/gossip', {method: 'POST'}).then(r => r.json());
-    log(`🔄 Gossip: ${r.transfers} transfer(s) — ${JSON.stringify(r.deviceCounts)}`);
+    log(`Gossip: ${r.transfers} transfer(s) — ${JSON.stringify(r.deviceCounts)}`);
     refresh();
 }
 
 async function flushBridges() {
     const r = await fetch('/api/mesh/flush', {method: 'POST'}).then(r => r.json());
-    log(`📡 ${r.uploadsAttempted} bridge upload(s):`);
+    log(`${r.uploadsAttempted} bridge upload(s):`);
     r.results.forEach(res => {
-        log(`   ${res.bridgeNode} packet ${res.packetId} → ${res.outcome}` +
+        log(`  ${res.bridgeNode} packet ${res.packetId} → ${res.outcome}` +
             (res.reason ? ` (${res.reason})` : ''));
     });
     refresh();
@@ -246,7 +446,7 @@ async function flushBridges() {
 
 async function resetMesh() {
     await fetch('/api/mesh/reset', {method: 'POST'});
-    log('🗑 mesh + idempotency cache cleared');
+    log('Mesh + idempotency cache cleared');
     refresh();
 }
 
